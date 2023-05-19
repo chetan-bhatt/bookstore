@@ -1,0 +1,255 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Swagger BookStore
+servers:
+  - url: http://localhost:8080/api/v1/books
+paths:
+  /books:
+    get:
+      summary: List books
+      operationId: getBooks
+      tags:
+        - books
+      parameters:
+        - name: author
+          in: query
+          description: Get the books by the author
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          description: Get the books by category
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Get the books by the author
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: Get the books by the author
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 50
+      responses:
+        '200':
+          description: A paged response of books
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedBookResponse"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceError"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceError"
+    post:
+      summary: Add a book
+      operationId: addBook
+      tags:
+        - books
+      requestBody:
+        description: Request Body for adding a book
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddBookRequest'
+      responses:
+        '201':
+          description: Successful
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceError"
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceError"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceError"
+  /books/{id}:
+    get:
+      summary: Get specific book by id
+      operationId: getBook
+      tags:
+        - books
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the book to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        '404':
+          description: Not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceError"
+    delete:
+      summary: Delete the specific book by id
+      operationId: deleteBook
+      tags:
+        - books
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the book to delete
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successfully deleted
+        '404':
+          description: Not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceError"
+  /books/search:
+    get:
+      summary: Search books by query
+      description: Search books by query.
+      operationId: searchBook
+      tags:
+        - books
+      parameters:
+        - name: query
+          in: query
+          description: Search books by providing query string. Only Equality operator(:) is supported as of now.
+            Example of a query string - name:abc
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Get the books by the author
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: Get the books by the author
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 50
+      responses:
+        '200':
+          description: A paged response of books
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedBookResponse"
+        '404':
+          description: Not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceError"
+components:
+  schemas:
+    Book:
+      type: object
+      required:
+        - id
+        - name
+        - author
+        - category
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        author:
+          type: string
+        category:
+          $ref: "#/components/schemas/Category"
+    AddBookRequest:
+      type: object
+      required:
+        - name
+        - author
+        - category
+      properties:
+        name:
+          type: string
+        author:
+          type: string
+        category:
+          $ref: "#/components/schemas/Category"
+    PagedBookResponse:
+      type: object
+      properties:
+        books:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        total-items:
+          type: integer
+          format: int64
+        current-page:
+          type: integer
+          format: int32
+        total-pages:
+          type: integer
+          format: int32
+    Category:
+      type: string
+      enum:
+        - Technical
+        - Literature
+        - Humour
+        - Poetry
+        - Science Fiction
+    ServiceError:
+      type: object
+      properties:
+        errorMessage:
+          type: string
+        errorCode:
+          type: string
+        details:
+          type: object
